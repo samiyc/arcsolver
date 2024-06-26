@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TrainTest {
     public List<List<Byte>> input;
@@ -26,16 +27,18 @@ public class TrainTest {
         return copy;
     }
 
-    public void analyzeTmpGrid() {
-        this.tmpPixels = analyzeGrid(tmp);
-    }
-
-    public void analyzeGrids() {
+    public void analyzeAllGrids() {
         this.inputPixels = analyzeGrid(input);
         this.outputPixels = analyzeGrid(output);
+        this.tmpPixels = analyzeGrid(tmp);
 
         // Link input and output pixels
-        linkStepBro(inputPixels, outputPixels);
+        linkStepBro(tmpPixels, outputPixels);
+    }
+
+    public void analyzeTmpGrids() {
+        this.tmpPixels = analyzeGrid(tmp);
+        linkStepBro(tmpPixels, outputPixels);
     }
 
     private List<Pixel> analyzeGrid(List<List<Byte>> grid) {
@@ -109,12 +112,12 @@ public class TrainTest {
     }
 
     public void log() {
-        System.out.println("\nTrain Input:");
-        printGrid(input);
+//        System.out.println("\nTrain Input:");
+//        printGrid(input);
         System.out.println("\nTmp data:");
         printGrid(tmp);
-        System.out.println("\nTrain Output:");
-        printGrid(output);
+//        System.out.println("\nTrain Output:");
+//        printGrid(output);
     }
 
     private void printGrid(List<List<Byte>> grid) {
@@ -133,5 +136,55 @@ public class TrainTest {
             }
             System.out.println(); // Move to the next line after printing each row
         }
+    }
+
+    // Method to filter pixels based on the filter criteria
+    public List<Pixel> filterPixels(PixelFilter filter, int threshold) {
+        return tmpPixels.stream()
+                .filter(pixel -> matchesFilter(pixel, filter, threshold)
+                && !pixel.val.equals(pixel.stepBro.val))
+                .collect(Collectors.toList());
+    }
+
+    // Method to check if a pixel matches the filter criteria based on the threshold
+    private boolean matchesFilter(Pixel pixel, PixelFilter filter, int threshold) {
+        int matchCount = 0;
+        int criteriaCount = 0;
+
+        if (filter.val != null) {
+            criteriaCount++;
+            if (filter.val.equals(pixel.val)) {
+                matchCount++;
+            }
+        }
+
+        if (filter.row != null) {
+            criteriaCount++;
+            if (filter.row.equals((int) pixel.row)) {
+                matchCount++;
+            }
+        }
+
+        if (filter.col != null) {
+            criteriaCount++;
+            if (filter.col.equals((int) pixel.col)) {
+                matchCount++;
+            }
+        }
+
+        if (filter.around != null) {
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (filter.around.get(i).get(j) >= 0) {
+                        criteriaCount++;
+                        if (filter.around.get(i).get(j).equals(pixel.around.get(i).get(j))) {
+                            matchCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return matchCount >= (criteriaCount * threshold / 100);
     }
 }

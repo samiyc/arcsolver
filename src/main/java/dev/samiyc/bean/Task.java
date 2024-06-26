@@ -14,4 +14,9 @@ public class Task {
             tt.initializeTmpGrid();
         }
     }
+
+    public void analyzeGrids() {
+        train.forEach(TrainTest::analyzeAllGrids);
+        test.forEach(TrainTest::analyzeAllGrids);
+    }
 }
