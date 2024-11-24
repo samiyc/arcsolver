@@ -14,6 +14,18 @@ public class TrainTest {
     public List<Pixel> outputPixels;
     public List<Pixel> tmpPixels;
 
+    // Define 8 directions: up, down, left, right, and 4 diagonals
+    int[][] ALL_DIRECTIONS = {
+            {-1, 0}, // Up
+            {1, 0},  // Down
+            {0, -1}, // Left
+            {0, 1},  // Right
+            {-1, -1}, // Up-Left
+            {-1, 1},  // Up-Right
+            {1, -1},  // Down-Left
+            {1, 1}    // Down-Right
+    };
+
     public void initializeTmpGrid() {
         this.tmp = deepCopyGrid(input);
     }
@@ -58,24 +70,29 @@ public class TrainTest {
         return pixels;
     }
 
-
     private List<List<Byte>> getAroundValues(List<List<Byte>> grid, int row, int col) {
         List<List<Byte>> around = new ArrayList<>();
-        for (int i = -1; i <= 1; i++) {
-            List<Byte> rowValues = new ArrayList<>();
-            for (int j = -1; j <= 1; j++) {
-                int r = row + i;
-                int c = col + j;
+        int rows = grid.size();
+        int cols = grid.get(0).size();
 
-                if (i == j && i == 0) {
-                    rowValues.add((byte) -2); // CurrentPixel
-                } else if (r >= 0 && r < grid.size() && c >= 0 && c < grid.get(0).size()) {
-                    rowValues.add(grid.get(r).get(c));
+        for (int[] direction : ALL_DIRECTIONS) {
+            List<Byte> line = new ArrayList<>();
+            int r = row;
+            int c = col;
+
+            // Extend in the direction until out of bounds
+            while (true) {
+                r += direction[0];
+                c += direction[1];
+
+                if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                    line.add(grid.get(r).get(c));
                 } else {
-                    rowValues.add((byte) -1); // Outside the grid boundaries
+                    line.add((byte) -1); // Outside the grid
+                    break;
                 }
             }
-            around.add(rowValues);
+            around.add(line);
         }
         return around;
     }
@@ -111,13 +128,16 @@ public class TrainTest {
         return true;
     }
 
-    public void log() {
-//        System.out.println("\nTrain Input:");
-//        printGrid(input);
+    public void logTmp() {
         System.out.println("\nTmp data:");
         printGrid(tmp);
-//        System.out.println("\nTrain Output:");
-//        printGrid(output);
+    }
+    public void logInOut() {
+        System.out.println("\n-------------- LOG IN/OUT --------------");
+        System.out.println("\nTrain Input:");
+        printGrid(input);
+        System.out.println("\nTrain Output:");
+        printGrid(output);
     }
 
     private void printGrid(List<List<Byte>> grid) {
@@ -157,34 +177,30 @@ public class TrainTest {
                 matchCount++;
             }
         }
-
         if (filter.row != null) {
             criteriaCount++;
             if (filter.row.equals((int) pixel.row)) {
                 matchCount++;
             }
         }
-
         if (filter.col != null) {
             criteriaCount++;
             if (filter.col.equals((int) pixel.col)) {
                 matchCount++;
             }
         }
-
         if (filter.around != null) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    if (filter.around.get(i).get(j) >= 0) {
-                        criteriaCount++;
-                        if (filter.around.get(i).get(j).equals(pixel.around.get(i).get(j))) {
-                            matchCount++;
-                        }
+            for (int i = 0; i < Math.min(filter.around.size(), pixel.around.size()); i++) {
+                List<Byte> filterLine = filter.around.get(i);
+                List<Byte> pixelLine = pixel.around.get(i);
+                for (int j = 0; j < Math.min(filterLine.size(), pixelLine.size()); j++) {
+                    criteriaCount++;
+                    if (filterLine.get(j).equals(pixelLine.get(j))) {
+                        matchCount++;
                     }
                 }
             }
         }
-
         return matchCount >= (criteriaCount * threshold / 100);
     }
 }

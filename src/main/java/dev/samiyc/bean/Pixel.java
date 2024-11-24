@@ -19,17 +19,15 @@ public class Pixel {
     }
 
     public Position findValuePosition(Byte value) {
-        Position pos = null;
         for (int i = 0; i < around.size(); i++) {
             List<Byte> rowValues = around.get(i);
             for (int j = 0; j < rowValues.size(); j++) {
                 if (rowValues.get(j) != null && rowValues.get(j).equals(value)) {
-                    if (pos != null) return null; // Already exist return null
-                    pos = new Position(i, j);
+                    return new Position(i, j);
                 }
             }
         }
-        return pos; // Return the Value found or null
+        return null; // no pos found for value
     }
 
     // Method to generate a PixelFilter from this Pixel
@@ -41,10 +39,10 @@ public class Pixel {
     public String toString() {
         return "Pixel{" +
                 "val=" + val +
-                ", around=" + around +
                 ", stepBro=" + (stepBro != null ? stepBro.val : "null") +
                 ", row=" + row +
                 ", col=" + col +
+                ", around=" + around +
                 '}';
     }
 }
